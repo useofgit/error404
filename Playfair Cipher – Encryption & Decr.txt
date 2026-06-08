@@ -1,0 +1,176 @@
+Playfair Cipher – Encryption & Decryption (Python)
+def generate_matrix(key):
+    key = key.upper().replace("J", "I")
+    matrix = []
+    used = set()
+
+    for char in key:
+        if char.isalpha() and char not in used:
+            used.add(char)
+            matrix.append(char)
+
+    for char in "ABCDEFGHIKLMNOPQRSTUVWXYZ":
+        if char not in used:
+            used.add(char)
+            matrix.append(char)
+
+    return [matrix[i:i+5] for i in range(0, 25, 5)]
+
+
+def find_position(matrix, char):
+    if char == 'J':
+        char = 'I'
+
+    for i in range(5):
+        for j in range(5):
+            if matrix[i][j] == char:
+                return i, j
+
+
+def prepare_text(text):
+    text = text.upper().replace("J", "I")
+    text = ''.join(filter(str.isalpha, text))
+
+    result = ""
+    i = 0
+
+    while i < len(text):
+        a = text[i]
+
+        if i + 1 < len(text):
+            b = text[i + 1]
+            if a == b:
+                result += a + 'X'
+                i += 1
+            else:
+                result += a + b
+                i += 2
+        else:
+            result += a + 'X'
+            i += 1
+
+    return result
+
+
+def playfair_encrypt(plaintext, key):
+    matrix = generate_matrix(key)
+    plaintext = prepare_text(plaintext)
+
+    ciphertext = ""
+
+    for i in range(0, len(plaintext), 2):
+        a, b = plaintext[i], plaintext[i+1]
+
+        row1, col1 = find_position(matrix, a)
+        row2, col2 = find_position(matrix, b)
+
+        if row1 == row2:
+            ciphertext += matrix[row1][(col1 + 1) % 5]
+            ciphertext += matrix[row2][(col2 + 1) % 5]
+
+        elif col1 == col2:
+            ciphertext += matrix[(row1 + 1) % 5][col1]
+            ciphertext += matrix[(row2 + 1) % 5][col2]
+
+        else:
+            ciphertext += matrix[row1][col2]
+            ciphertext += matrix[row2][col1]
+
+    return ciphertext
+
+
+def playfair_decrypt(ciphertext, key):
+    matrix = generate_matrix(key)
+
+    plaintext = ""
+
+    for i in range(0, len(ciphertext), 2):
+        a, b = ciphertext[i], ciphertext[i+1]
+
+        row1, col1 = find_position(matrix, a)
+        row2, col2 = find_position(matrix, b)
+
+        if row1 == row2:
+            plaintext += matrix[row1][(col1 - 1) % 5]
+            plaintext += matrix[row2][(col2 - 1) % 5]
+
+        elif col1 == col2:
+            plaintext += matrix[(row1 - 1) % 5][col1]
+            plaintext += matrix[(row2 - 1) % 5][col2]
+
+        else:
+            plaintext += matrix[row1][col2]
+            plaintext += matrix[row2][col1]
+
+    return plaintext
+
+
+# Example
+key = "MONARCHY"
+plaintext = "INSTRUMENTS"
+
+cipher = playfair_encrypt(plaintext, key)
+print("Encrypted:", cipher)
+
+decrypted = playfair_decrypt(cipher, key)
+print("Decrypted:", decrypted)
+________________________________________
+Vigenère Cipher – Encryption & Decryption (Python)
+def vigenere_encrypt(plaintext, key):
+    plaintext = plaintext.upper()
+    key = key.upper()
+
+    ciphertext = ""
+    key_index = 0
+
+    for char in plaintext:
+        if char.isalpha():
+            p = ord(char) - ord('A')
+            k = ord(key[key_index % len(key)]) - ord('A')
+
+            c = (p + k) % 26
+            ciphertext += chr(c + ord('A'))
+
+            key_index += 1
+        else:
+            ciphertext += char
+
+    return ciphertext
+
+
+def vigenere_decrypt(ciphertext, key):
+    ciphertext = ciphertext.upper()
+    key = key.upper()
+
+    plaintext = ""
+    key_index = 0
+
+    for char in ciphertext:
+        if char.isalpha():
+            c = ord(char) - ord('A')
+            k = ord(key[key_index % len(key)]) - ord('A')
+
+            p = (c - k + 26) % 26
+            plaintext += chr(p + ord('A'))
+
+            key_index += 1
+        else:
+            plaintext += char
+
+    return plaintext
+
+
+# Example
+plaintext = "CYBERSECURITY"
+key = "BEST"
+
+cipher = vigenere_encrypt(plaintext, key)
+print("Encrypted:", cipher)
+
+decrypted = vigenere_decrypt(cipher, key)
+print("Decrypted:", decrypted)
+
+
+
+
+

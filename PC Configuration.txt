@@ -1,0 +1,286 @@
+PC Configuration
+Desktop → IP Configuration
+Setting	Value
+IP Address	192.168.1.2
+Subnet Mask	255.255.255.0
+Default Gateway	192.168.1.1
+________________________________________
+Router Configuration (SSH)
+enable
+configure terminal
+
+hostname Router1
+ip domain-name cnslab.com
+
+interface gig0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+
+username CNSLab privilege 15 secret cisco
+
+service password-encryption
+
+crypto key generate rsa
+1024
+
+ip ssh version 2
+
+line vty 0 4
+login local
+transport input ssh
+exit
+
+copy running-config startup-config
+________________________________________
+Switch Configuration (SSH)
+enable
+configure terminal
+
+hostname Switch1
+ip domain-name cnslab.com
+
+interface vlan 1
+ip address 192.168.1.10 255.255.255.0
+no shutdown
+exit
+
+ip default-gateway 192.168.1.1
+
+username CNSLab privilege 15 secret cisco
+
+service password-encryption
+
+crypto key generate rsa
+1024
+
+ip ssh version 2
+
+line vty 0 4
+login local
+transport input ssh
+exit
+
+copy running-config startup-config
+________________________________________
+SSH Testing from PC
+Desktop → Command Prompt
+ping 192.168.1.1
+ssh -l CNSLab 192.168.1.1
+Password:
+cisco
+________________________________________
+Telnet Configuration (If Asked Instead of SSH)
+enable
+configure terminal
+
+interface gig0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+
+username CNSLab password cisco
+
+line vty 0 4
+login local
+transport input telnet
+exit
+
+copy running-config startup-config
+ 
+
+ 
+ 
+AAA Authentication using RADIUS + SSH (Final Lab Steps)
+1. ROUTER CONFIGURATION
+enable
+
+configure terminal
+
+hostname R1
+
+interface g0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+
+aaa new-model
+
+radius-server host 192.168.1.2 key cisco
+
+aaa authentication login default group radius local
+
+username backup privilege 15 secret backup123
+
+ip domain-name lab.local
+
+crypto key generate rsa
+1024
+
+ip ssh version 2
+
+line vty 0 4
+transport input ssh
+login authentication default
+exit
+
+end
+
+write memory
+________________________________________
+2. SERVER CONFIGURATION
+Desktop → IP Configuration
+IP Address: 192.168.1.2
+Subnet Mask: 255.255.255.0
+Default Gateway: 192.168.1.1
+________________________________________
+Services → AAA
+AAA Service: ON
+Add Router Client
+Client Name: R1
+Client IP: 192.168.1.1
+Secret: cisco
+Server Type: Radius
+Click:
+Add
+________________________________________
+Add User
+Username: admin
+Password: cisco123
+Click:
+Add
+________________________________________
+3. PC CONFIGURATION
+Desktop → IP Configuration
+IP Address: 192.168.1.10
+Subnet Mask: 255.255.255.0
+Default Gateway: 192.168.1.1
+________________________________________
+4. TESTING
+PC → Command Prompt
+Ping Test
+ping 192.168.1.1
+ping 192.168.1.2
+________________________________________
+SSH Login Test
+ssh -l admin 192.168.1.1
+Password:
+cisco123
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+CNS Experiment 3 — Final Practical Steps
+Topology Connections
+•	PC1 Fa0 → Switch Fa0/1
+•	PC2 Fa0 → Switch Fa0/2
+•	PC3 Fa0 → Switch Fa0/3
+•	Switch Fa0/5 → Router G0/0
+•	Router G0/1 → Server Fa0
+________________________________________
+PC1 Configuration
+Desktop → IP Configuration
+IP Address: 192.168.1.10
+Subnet Mask: 255.255.255.0
+Default Gateway: 192.168.1.1
+________________________________________
+PC2 Configuration
+Desktop → IP Configuration
+IP Address: 192.168.1.20
+Subnet Mask: 255.255.255.0
+Default Gateway: 192.168.1.1
+________________________________________
+PC3 Configuration
+Desktop → IP Configuration
+IP Address: 192.168.1.30
+Subnet Mask: 255.255.255.0
+Default Gateway: 192.168.1.1
+________________________________________
+Server Configuration
+Desktop → IP Configuration
+IP Address: 192.168.2.100
+Subnet Mask: 255.255.255.0
+Default Gateway: 192.168.2.1
+________________________________________
+Router Configuration
+CLI Commands
+enable
+configure terminal
+
+interface g0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+
+interface g0/1
+ip address 192.168.2.1 255.255.255.0
+no shutdown
+exit
+________________________________________
+Connectivity Test
+PC1 → Desktop → Command Prompt
+ping 192.168.2.100
+________________________________________
+Standard ACL Configuration
+Router CLI
+enable
+configure terminal
+
+access-list 10 deny 192.168.1.20 0.0.0.0
+access-list 10 permit any
+
+interface g0/0
+ip access-group 10 in
+exit
+________________________________________
+Standard ACL Testing
+From PC1
+ping 192.168.2.100
+From PC2
+ping 192.168.2.100
+________________________________________
+Extended ACL Configuration
+Router CLI
+enable
+configure terminal
+
+access-list 100 permit tcp host 192.168.1.10 host 192.168.2.100 eq 80
+access-list 100 deny tcp host 192.168.1.20 host 192.168.2.100 eq 21
+access-list 100 permit ip any any
+
+interface g0/0
+no ip access-group 10 in
+ip access-group 100 in
+exit
+________________________________________
+Enable Server Services
+Server → Services
+HTTP
+HTTP → ON
+FTP
+FTP → ON
+________________________________________
+HTTP Test
+PC1 → Desktop → Web Browser
+http://192.168.2.100
+________________________________________
+Verification Commands
+Router CLI
+show access-lists
+show ip interface
+show running-config
+
